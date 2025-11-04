@@ -1,8 +1,8 @@
 -- SubQuery
 
--- ---------------
--- WHERE절에서 사용
--- ---------------
+-- ----------------------
+-- WHERE 절에서 사용
+-- ----------------------
 -- 단일 행 서브쿼리
 -- 서브쿼리가 단일 행 비교 연산자(=, <, <=, >, >=, <>)와 함께 사용할 떄는 서브쿼리의 결과 수가 반드시 1건 이하
 -- 2건 이상일 경우 오류 발생
@@ -69,4 +69,61 @@ WHERE
 		where
 			department_managers.emp_id = employees.emp_id
 	)
+;
+
+-- ----------------------
+-- SELECT 절에서 사용
+-- ----------------------
+-- 성능저하 문제로 잘 쓰지 않음
+-- 사원별 역대 전체 급여 평균
+SELECT
+	emp.emp_id
+	,(
+		SELECT AVG(sal.salary)
+		FROM salaries sal
+		WHERE emp.emp_id = sal.emp_id
+	) avg_sal
+FROM employees emp
+;
+
+-- ----------------------
+-- FROM 절에서 사용
+-- ----------------------
+SELECT 
+	tmp.*
+FROM (
+	SELECT 
+		emp.emp_id
+		,emp.`name`
+	FROM employees emp
+) tmp
+;
+
+-- -----------------
+-- INSERT문에서 사용
+-- -----------------
+INSERT INTO title_emps(
+	emp_id
+	,title_code
+	,start_at
+)
+VALUES(
+	(SELECT MAX(emp_id) FROM employees)
+	,(SELECT title_code FROM titles WHERE title = '사원')
+	,DATE(NOW())
+);
+
+-- ----------------------
+-- UPDATE 절에서 사용
+-- ----------------------
+UPDATE title_emps tite1
+SET
+	tite1.end_at = (
+		SELECT emp.fire_at
+		FROM employees emp
+		WHERE emp.emp_id = 100000
+	)
+WHERE
+	tite1.emp_id = 100000 
+	AND tite1.end_at IS null
 ;
